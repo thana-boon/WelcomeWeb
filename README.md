@@ -34,6 +34,23 @@ docker compose up --build
 หยุดการทำงาน: `Ctrl+C` แล้ว `docker compose down`
 ล้างข้อมูล database ด้วย (ลบ volume): `docker compose down -v`
 
+### หมายเหตุสำหรับผู้ใช้ Windows (เรื่อง line ending)
+
+`docker-entrypoint.sh` ต้องเป็น **LF** เท่านั้น ถ้าถูกแปลงเป็น CRLF จะรันใน Linux container ไม่ได้
+และขึ้น error `exec ./docker-entrypoint.sh: no such file or directory` พร้อม restart loop
+
+โปรเจกต์นี้กันปัญหานี้ไว้ 2 ชั้นแล้ว จึง clone ไปรันได้เลยไม่ว่า `core.autocrlf` จะตั้งไว้เป็นอะไร:
+
+1. **`.gitattributes`** บังคับให้ไฟล์ `.sh`, `Dockerfile`, `.env.example` ฯลฯ เป็น LF เสมอตอน checkout
+2. **`Dockerfile`** มีขั้นตอน `sed -i 's/\r$//'` แปลง CRLF → LF ตอน build อีกชั้น (defense in depth)
+
+ถ้า clone มาก่อนที่จะมี `.gitattributes` แล้วยังเจอปัญหา CRLF อยู่ ให้ normalize ใหม่ครั้งเดียว:
+
+```bash
+git add --renormalize .
+git commit -m "Normalize line endings"
+```
+
 ---
 
 ## หน้าเว็บที่มี
